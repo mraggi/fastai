@@ -68,11 +68,14 @@ def train_epoch(model:nn.Module, dl:DataLoader, opt:optim.Optimizer, loss_func:L
         opt.step()
         opt.zero_grad()
 
-def fit(epochs:int, model:nn.Module, loss_func:LossFunction, opt:optim.Optimizer,
+def fit(epochs:Union[int,float], model:nn.Module, loss_func:LossFunction, opt:optim.Optimizer,
         data:DataBunch, callbacks:Optional[CallbackList]=None, metrics:OptMetrics=None)->None:
     "Fit the `model` on `data` and learn using `loss_func` and `opt`."
+    intepochs = math.ceil(epochs)
+    npartialbatches = int((epochs - int(epochs)) * len(data.train_dl))
+
     cb_handler = CallbackHandler(callbacks, metrics)
-    pbar = master_bar(range(epochs))
+    pbar = master_bar(range(intepochs))
     cb_handler.on_train_begin(epochs, pbar=pbar, metrics=metrics)
 
     exception=False
@@ -81,10 +84,16 @@ def fit(epochs:int, model:nn.Module, loss_func:LossFunction, opt:optim.Optimizer
             model.train()
             cb_handler.set_dl(data.train_dl)
             cb_handler.on_epoch_begin()
-            for xb,yb in progress_bar(data.train_dl, parent=pbar):
+            full = (epoch+1 < intepochs)
+            nbatchesleft = len(data.train_dl) if full else npartialbatches
+            epochbar = progress_bar(data.train_dl, parent=pbar)
+            epochbar.total = nbatchesleft
+            for xb,yb in epochbar:
                 xb, yb = cb_handler.on_batch_begin(xb, yb)
                 loss = loss_batch(model, xb, yb, loss_func, opt, cb_handler)
-                if cb_handler.on_batch_end(loss): break
+                nbatchesleft -= 1
+                if cb_handler.on_batch_end(loss) or nbatchesleft == 0: break
+
 
             if not data.empty_val:
                 val_loss = validate(model, data.valid_dl, loss_func=loss_func,
@@ -162,7 +171,7 @@ class Learner():
         else: res = [lr.stop/10]*(len(self.layer_groups)-1) + [lr.stop]
         return np.array(res)
 
-    def fit(self, epochs:int, lr:Union[Floats,slice]=defaults.lr,
+    def fit(self, epochs:Union[int,float], lr:Union[Floats,slice]=defaults.lr,
             wd:Floats=None, callbacks:Collection[Callback]=None)->None:
         "Fit the model on this learner with `lr` learning rate, `wd` weight decay for `epochs` with `callbacks`."
         lr = self.lr_range(lr)

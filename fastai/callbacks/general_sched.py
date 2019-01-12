@@ -24,7 +24,7 @@ class GeneralScheduler(LearnerCallback):
         super().__init__(learn)
         self.phases = phases
 
-    def on_train_begin(self, n_epochs:int, **kwargs:Any)->None:
+    def on_train_begin(self, n_epochs:Union[int,float], **kwargs:Any)->None:
         "Initialize the lr and mom schedules for training."
         self.lr_scheds = [p.lr_step for p in self.phases]
         self.mom_scheds = [p.mom_step for p in self.phases]

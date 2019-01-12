@@ -18,7 +18,7 @@ class OneCycleScheduler(LearnerCallback):
         return [Stepper(step, n_iter, func=func)
                 for (step,(n_iter,func)) in zip(steps_cfg, self.phases)]
 
-    def on_train_begin(self, n_epochs:int, **kwargs:Any)->None:
+    def on_train_begin(self, n_epochs:Union[int,float], **kwargs:Any)->None:
         "Initialize our optimization params based on our annealing schedule."
         n = len(self.learn.data.train_dl) * n_epochs
         a1 = int(n * self.pct_start)

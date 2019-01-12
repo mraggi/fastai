@@ -204,7 +204,7 @@ class CallbackHandler():
             self.callbacks.append(dl.dataset)
             self.cb_dl = dl.dataset
     
-    def on_train_begin(self, epochs:int, pbar:PBar, metrics:MetricFuncList)->None:
+    def on_train_begin(self, epochs:Union[int,float], pbar:PBar, metrics:MetricFuncList)->None:
         "About to start learning."
         self.state_dict = _get_init_state()
         self.state_dict['n_epochs'],self.state_dict['pbar'],self.state_dict['metrics'] = epochs,pbar,metrics

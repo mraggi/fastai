@@ -11,7 +11,7 @@ def one_cycle_scheduler(lr_max:float, **kwargs:Any)->OneCycleScheduler:
     "Instantiate a `OneCycleScheduler` with `lr_max`."
     return partial(OneCycleScheduler, lr_max=lr_max, **kwargs)
 
-def fit_one_cycle(learn:Learner, cyc_len:int, max_lr:Union[Floats,slice]=defaults.lr,
+def fit_one_cycle(learn:Learner, cyc_len:Union[int,float], max_lr:Union[Floats,slice]=defaults.lr,
                   moms:Tuple[float,float]=(0.95,0.85), div_factor:float=25., pct_start:float=0.3,
                   wd:float=None, callbacks:Optional[CallbackList]=None, **kwargs)->None:
     "Fit a model following the 1cycle policy."
@@ -61,7 +61,7 @@ Learner.mixup = mixup
 
 class ShowGraph(LearnerCallback):
     "Update a graph of learner stats and metrics after each epoch."
-    def on_epoch_end(self, n_epochs:int, last_metrics:MetricsList, **kwargs)->bool:
+    def on_epoch_end(self, n_epochs:Union[int,float], last_metrics:MetricsList, **kwargs)->bool:
         "If we have `last_metrics` plot them in our pbar graph"
         if last_metrics is not None:
             rec = self.learn.recorder
