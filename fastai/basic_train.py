@@ -72,7 +72,7 @@ def fit(epochs:Union[int,float], model:nn.Module, loss_func:LossFunction, opt:op
         data:DataBunch, callbacks:Optional[CallbackList]=None, metrics:OptMetrics=None)->None:
     "Fit the `model` on `data` and learn using `loss_func` and `opt`."
     intepochs = math.ceil(epochs)
-    npartialbatches = int((epochs - int(epochs)) * len(data.train_dl))
+    npartialbatches = int((epochs - int(epochs))*len(data.train_dl))
 
     cb_handler = CallbackHandler(callbacks, metrics)
     pbar = master_bar(range(intepochs))
@@ -84,15 +84,16 @@ def fit(epochs:Union[int,float], model:nn.Module, loss_func:LossFunction, opt:op
             model.train()
             cb_handler.set_dl(data.train_dl)
             cb_handler.on_epoch_begin()
-            full = (epoch+1 < intepochs)
-            nbatchesleft = len(data.train_dl) if full else npartialbatches
+            nbatchesleft = len(data.train_dl)+1
             epochbar = progress_bar(data.train_dl, parent=pbar)
-            epochbar.total = nbatchesleft
+            if npartialbatches > 0 and epoch+1==intepochs:
+                epochbar.total = nbatchesleft = npartialbatches
+
             for xb,yb in epochbar:
                 xb, yb = cb_handler.on_batch_begin(xb, yb)
                 loss = loss_batch(model, xb, yb, loss_func, opt, cb_handler)
                 nbatchesleft -= 1
-                if cb_handler.on_batch_end(loss) or nbatchesleft == 0: break
+                if cb_handler.on_batch_end(loss) or nbatchesleft <= 0: break
 
 
             if not data.empty_val:

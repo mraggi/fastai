@@ -20,7 +20,7 @@ class OneCycleScheduler(LearnerCallback):
 
     def on_train_begin(self, n_epochs:Union[int,float], **kwargs:Any)->None:
         "Initialize our optimization params based on our annealing schedule."
-        n = len(self.learn.data.train_dl) * n_epochs
+        n = math.ceil(len(self.learn.data.train_dl) * n_epochs)
         a1 = int(n * self.pct_start)
         a2 = n-a1
         self.phases = ((a1, annealing_cos), (a2, annealing_cos))
